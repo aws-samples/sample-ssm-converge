@@ -1,0 +1,116 @@
+/* ============================================================================
+   AWS brand palette for MkDocs Material
+   ----------------------------------------------------------------------------
+   Reference colors (AWS Cloudscape design system):
+     Squid Ink:    #232f3e   - primary nav, headers
+     Anchor:       #161e2d   - dark mode background
+     Smile Orange: #ff9900   - accent / call-to-action
+     AWS Blue:     #0073bb   - links / selection
+     Cool Mist:    #f2f3f3   - subtle surfaces
+   ============================================================================ */
+
+/* Light scheme - Squid Ink primary, Smile Orange accent */
+[data-md-color-scheme="default"][data-md-color-primary="custom"] {
+  --md-primary-fg-color:        #232f3e;   /* Squid Ink */
+  --md-primary-fg-color--light: #31465f;
+  --md-primary-fg-color--dark:  #161e2d;
+  --md-primary-bg-color:        #ffffff;
+  --md-primary-bg-color--light: #ffffffb3;
+
+  --md-typeset-a-color:         #0073bb;   /* AWS Blue for links */
+}
+
+[data-md-color-scheme="default"][data-md-color-accent="custom"] {
+  --md-accent-fg-color:         #ff9900;   /* Smile Orange */
+  --md-accent-fg-color--transparent: #ff990033;
+  --md-accent-bg-color:         #ffffff;
+  --md-accent-bg-color--light:  #ffffffb3;
+}
+
+/* Dark scheme - Anchor background, lighter Squid Ink for nav, Smile Orange accent */
+[data-md-color-scheme="slate"][data-md-color-primary="custom"] {
+  --md-primary-fg-color:        #161e2d;   /* Anchor */
+  --md-primary-fg-color--light: #232f3e;
+  --md-primary-fg-color--dark:  #0d1320;
+  --md-primary-bg-color:        #ffffff;
+  --md-primary-bg-color--light: #ffffffb3;
+
+  /* Slightly lifted background for slate so it's not pitch black. */
+  --md-default-bg-color:        #1b2433;
+
+  --md-typeset-a-color:         #4ea1d3;   /* lighter blue for dark mode contrast */
+}
+
+[data-md-color-scheme="slate"][data-md-color-accent="custom"] {
+  --md-accent-fg-color:         #ff9900;
+  --md-accent-fg-color--transparent: #ff990033;
+  --md-accent-bg-color:         #ffffff;
+  --md-accent-bg-color--light:  #ffffffb3;
+}
+
+/* ----------------------------------------------------------------------------
+   Tighten things up: tables, code blocks, hero
+---------------------------------------------------------------------------- */
+
+/* Make code blocks read like AWS docs: subtle background, sharp corners */
+.md-typeset code {
+  font-size: 0.86em;
+}
+.md-typeset pre > code {
+  border-radius: 4px;
+}
+
+/* Table headers in primary color for visual rhythm */
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color);
+  color: #ffffff;
+}
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background-color: #2b3a52;
+}
+
+/* Admonitions: nudge "tip" and "note" toward AWS palette */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-color: #ff9900;
+}
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background-color: #ff990014;
+}
+
+/* Section landing-page tiles. Used on Resources / Deploying / Examples index pages.
+   Markup: a regular markdown table where the first column is bolded category. */
+.md-typeset .grid.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.md-typeset .grid.cards > * {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  transition: border-color 200ms, transform 200ms;
+}
+.md-typeset .grid.cards > *:hover {
+  border-color: #ff9900;
+  transform: translateY(-2px);
+}
+.md-typeset .grid.cards h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+/* Top tabs: subtle separator instead of underline-on-active */
+.md-tabs {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Footer */
+.md-footer {
+  background-color: var(--md-primary-fg-color--dark);
+}
+.md-footer-meta {
+  background-color: var(--md-primary-fg-color--dark);
+}

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "2.2",
+  "description": "SSM Converge: Audit Mode — check compliance without making changes. Ideal for State Manager drift detection.",
+  "parameters": {
+    "Profile": {
+      "type": "String",
+      "default": "security-audit",
+      "description": "Profile name used in the compliance report"
+    },
+    "S3Bucket": {
+      "type": "String",
+      "default": "DOC-EXAMPLE-BUCKET",
+      "description": "S3 bucket holding the ssm-converge distribution"
+    },
+    "ReportBucket": {
+      "type": "String",
+      "default": "",
+      "description": "Optional S3 bucket to ship the full compliance report JSON to. Leave empty to skip."
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "InstallSSMConverge",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "mkdir -p /opt/ssm-converge",
+          "aws s3 sync s3://{{ S3Bucket }}/ssm-converge/src/linux/ /opt/ssm-converge/ --quiet"
+        ]
+      }
+    },
+    {
+      "action": "aws:runShellScript",
+      "name": "AuditCompliance",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "# AUDIT MODE — no changes, only reports drift.",
+          "export DSC_MODE='audit'",
+          "export DSC_PROFILE='{{ Profile }}'",
+          "export DSC_REPORT='full'",
+          "",
+          "source /opt/ssm-converge/lib.sh",
+          "",
+          "# ── SSH hardening checks ──",
+          "line_in_file '/etc/ssh/sshd_config' present \\",
+          "  line 'PermitRootLogin no' \\",
+          "  match '^#?PermitRootLogin'",
+          "line_in_file '/etc/ssh/sshd_config' present \\",
+          "  line 'PasswordAuthentication no' \\",
+          "  match '^#?PasswordAuthentication'",
+          "",
+          "# ── Kernel security ──",
+          "sysctl 'net.ipv4.conf.all.send_redirects' value '0'",
+          "sysctl 'net.ipv4.conf.all.accept_redirects' value '0'",
+          "sysctl 'net.ipv4.tcp_syncookies' value '1'",
+          "sysctl 'kernel.randomize_va_space' value '2'",
+          "",
+          "# ── Unwanted packages ──",
+          "package 'telnet' uninstalled",
+          "package 'ftp' uninstalled",
+          "package 'rsh' uninstalled",
+          "",
+          "# ── File permissions ──",
+          "file '/etc/passwd' present owner 'root' mode '0644'",
+          "file '/etc/shadow' present owner 'root' mode '0600'",
+          "file '/etc/crontab' present owner 'root' mode '0600'",
+          "",
+          "# ── Required services ──",
+          "service 'sshd' running enabled",
+          "",
+          "report_compliance",
+          "",
+          "if [ -n '{{ ReportBucket }}' ]; then",
+          "  get_report_json | aws s3 cp - \"s3://{{ ReportBucket }}/{{ Profile }}/$(hostname)-$(date -u +%Y%m%dT%H%M%SZ).json\" --content-type application/json --quiet",
+          "fi"
+        ]
+      }
+    }
+  ]
+}

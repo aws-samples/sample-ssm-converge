@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SSM Converge">
+  <!-- Outer ring: AWS Squid Ink -->
+  <circle cx="32" cy="32" r="28" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <!-- Three inward-pointing arrows = "converge" -->
+  <g fill="#ff9900" stroke="none">
+    <!-- top arrow -->
+    <path d="M32 8 L38 20 L34 20 L34 28 L30 28 L30 20 L26 20 Z"/>
+    <!-- bottom-right arrow -->
+    <path d="M52 44 L40 50 L42 46 L35 42 L37 38.5 L44 42.5 L46 38.5 Z"/>
+    <!-- bottom-left arrow -->
+    <path d="M12 44 L24 38.5 L22 42 L29 46 L27 49 L20 45 L18 49 Z"/>
+  </g>
+  <!-- center dot -->
+  <circle cx="32" cy="34" r="3" fill="#ffffff"/>
+</svg>

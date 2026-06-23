@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+/tmp/
+*.tmp
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Runtime data (generated on instances)
+/var/lib/ssm-converge/
+
+# Distributor build output
+/distributor/dist/
+
+# MkDocs build output
+/site/
+/public/   # GitLab Pages build artifact
+
+# Security scan output (ASH / similar)
+.ash/
+*.ash.yaml

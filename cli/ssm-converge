@@ -1,0 +1,340 @@
+#!/bin/bash
+# ═══════════════════════════════════════════════════════════════════════════════
+# SSM Converge CLI
+# Query local compliance state, history, and drift events, and execute
+# configurations in enforce / audit / destroy / comply modes.
+#
+# Usage:
+#   ssm-converge status              Show latest compliance state
+#   ssm-converge history [n]         Show last N runs (default: 10)
+#   ssm-converge drift               Show recent drift events
+#   ssm-converge export              Export latest report as InSpec-compatible JSON
+#   ssm-converge run <config>        Run a configuration (enforce mode)
+#   ssm-converge check <config>      Run a configuration in audit mode
+#   ssm-converge comply <config>     Run a configuration in audit + full report
+#   ssm-converge destroy <config>    Tear down resources defined in a configuration
+#   ssm-converge version             Show version (also: --version, -v)
+#   ssm-converge help                Show this help (also: --help, -h)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+SSM_CONVERGE_VERSION="0.1.2"
+DSC_LOCAL_DIR="${DSC_LOCAL_DIR:-/var/lib/ssm-converge}"
+
+# ─── Colors ───────────────────────────────────────────────────────────────────
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
+
+# Return the python binary to use, or empty if neither python3 nor python exists.
+_check_python() {
+  if command -v python3 &>/dev/null; then
+    echo "python3"
+  elif command -v python &>/dev/null; then
+    echo "python"
+  else
+    echo ""
+  fi
+}
+
+# Validate a configuration file exists, or print an error and exit 1.
+_require_config() {
+  local action="$1" config="$2"
+  if [ -z "$config" ]; then
+    echo "Usage: ssm-converge $action <config.sh>"
+    exit 1
+  fi
+  if [ ! -f "$config" ]; then
+    echo -e "${RED}Error:${NC} Configuration not found: $config"
+    exit 1
+  fi
+}
+
+# ─── Commands ─────────────────────────────────────────────────────────────────
+
+cmd_status() {
+  local report="$DSC_LOCAL_DIR/latest.json"
+
+  if [ ! -f "$report" ]; then
+    echo -e "${YELLOW}No compliance data yet.${NC} Run a configuration first."
+    exit 0
+  fi
+
+  local py=$(_check_python)
+  if [ -z "$py" ]; then
+    echo "latest.json exists at $report (python3 required for formatted output)"
+    cat "$report"
+    exit 0
+  fi
+
+  # Pretty-print the latest compliance report.
+  # Data flows in through argv so the python code stays fully quoted.
+  "$py" - "$report" <<'PY'
+import json, sys
+
+with open(sys.argv[1]) as f:
+    r = json.load(f)
+
+s = r.get('summary', {})
+total         = s.get('total', 0)
+compliant     = s.get('compliant', 0)
+non_compliant = s.get('non_compliant', 0)
+changed       = s.get('changed', 0)
+pct           = s.get('compliance_pct', 0)
+
+GREEN  = '\033[0;32m'
+YELLOW = '\033[0;33m'
+RED    = '\033[0;31m'
+NC     = '\033[0m'
+
+print()
+print('═══════════════════════════════════════════════════')
+print('  SSM Converge — Compliance Status')
+print('═══════════════════════════════════════════════════')
+print(f'  Last Run:   {r.get("timestamp", "unknown")}')
+print(f'  Profile:    {r.get("profile", "default")}')
+print(f'  Mode:       {r.get("mode", "unknown")}')
+print(f'  Run ID:     {r.get("run_id", "unknown")}')
+print()
+print(f'  Resources:  {total}')
+print(f'  Compliant:  {compliant}/{total} ({pct}%)')
+if non_compliant:
+    print(f'  ✗ Drift:    {non_compliant}')
+if changed:
+    print(f'  ↻ Changed:  {changed}')
+print()
+
+for res in r.get('resources', []):
+    status = res.get('status', '')
+    name   = res.get('resource', '')
+    detail = res.get('detail', '')
+    ch     = res.get('changed', False)
+
+    if status == 'compliant' and ch:
+        icon, color = '↻', YELLOW
+    elif status == 'compliant':
+        icon, color = '✓', GREEN
+    elif status == 'non_compliant':
+        icon, color = '✗', RED
+    else:
+        icon, color = '!', RED
+
+    suffix = f' — {detail}' if detail else ''
+    print(f'  {color}{icon}{NC} {name}{suffix}')
+
+print()
+print('═══════════════════════════════════════════════════')
+PY
+}
+
+cmd_history() {
+  local count="${1:-10}"
+  local history_dir="$DSC_LOCAL_DIR/history"
+
+  if [ ! -d "$history_dir" ] || [ -z "$(ls -A "$history_dir" 2>/dev/null)" ]; then
+    echo -e "${YELLOW}No history available.${NC}"
+    exit 0
+  fi
+
+  local py=$(_check_python)
+  if [ -z "$py" ]; then
+    ls -t "$history_dir"/*.json 2>/dev/null | head -n "$count"
+    exit 0
+  fi
+
+  echo ""
+  echo -e "${BOLD}  Recent Runs (last $count)${NC}"
+  echo "  ─────────────────────────────────────────────────────────────"
+  printf "  %-22s %-8s %-12s %-8s %s\n" "TIMESTAMP" "MODE" "PROFILE" "SCORE" "CHANGED"
+  echo "  ─────────────────────────────────────────────────────────────"
+
+  # Collect the last N history files and pass them as argv to python — one
+  # subprocess, no embedded-python-inside-a-pipeline gotchas.
+  local files=()
+  while IFS= read -r path; do
+    files+=("$path")
+  done < <(ls -t "$history_dir"/*.json 2>/dev/null | head -n "$count")
+
+  if [ ${#files[@]} -gt 0 ]; then
+    "$py" - "${files[@]}" <<'PY'
+import json, sys
+
+for path in sys.argv[1:]:
+    try:
+        with open(path) as fh:
+            r = json.load(fh)
+    except Exception:
+        continue
+    s       = r.get('summary', {})
+    ts      = r.get('timestamp', 'unknown')[:19]
+    mode    = r.get('mode', '?')
+    profile = r.get('profile', 'default')[:12]
+    score   = f"{s.get('compliant', 0)}/{s.get('total', 0)}"
+    changed = s.get('changed', 0)
+    print(f'  {ts}  {mode:<8} {profile:<12} {score:<8} {changed}')
+PY
+  fi
+
+  echo ""
+}
+
+cmd_drift() {
+  local drift_log="$DSC_LOCAL_DIR/drift.log"
+
+  if [ ! -f "$drift_log" ]; then
+    echo -e "${GREEN}No drift recorded.${NC} All clear."
+    exit 0
+  fi
+
+  echo ""
+  echo -e "${BOLD}  Recent Drift Events${NC}"
+  echo "  ─────────────────────────────────────────────────────────────"
+  tail -20 "$drift_log" | while read -r line; do
+    echo -e "  ${RED}✗${NC} $line"
+  done
+  echo ""
+}
+
+cmd_export() {
+  local report="$DSC_LOCAL_DIR/latest.json"
+
+  if [ ! -f "$report" ]; then
+    echo '{"error": "No compliance data available"}' >&2
+    exit 1
+  fi
+
+  local py=$(_check_python)
+  if [ -z "$py" ]; then
+    cat "$report"
+    exit 0
+  fi
+
+  # Transform the native report into an InSpec-compatible profile document.
+  # argv[1] = report path, argv[2] = ssm-converge version.
+  "$py" - "$report" "$SSM_CONVERGE_VERSION" <<'PY'
+import json, sys
+
+report_path = sys.argv[1]
+version     = sys.argv[2]
+
+with open(report_path) as f:
+    r = json.load(f)
+
+inspec = {
+    'platform': {
+        'name':    'aws-ssm-converge',
+        'release': version,
+    },
+    'profiles': [{
+        'name':     r.get('profile', 'default'),
+        'title':    f"SSM Converge: {r.get('profile', 'default')}",
+        'controls': [
+            {
+                'id':     res['resource'].replace('/', '_'),
+                'title':  res['resource'],
+                'desc':   res.get('detail', ''),
+                'impact': 0.7,
+                'results': [{
+                    'status':    'passed' if res.get('status') == 'compliant' else 'failed',
+                    'code_desc': res.get('detail', ''),
+                    'run_time':  (res.get('check_duration_ms', 0)
+                                  + res.get('apply_duration_ms', 0)) / 1000.0,
+                }],
+            }
+            for res in r.get('resources', [])
+        ],
+    }],
+    'statistics': {
+        'duration': sum(
+            (x.get('check_duration_ms', 0) + x.get('apply_duration_ms', 0))
+            for x in r.get('resources', [])
+        ) / 1000.0,
+    },
+    'version': version,
+}
+
+print(json.dumps(inspec, indent=2))
+PY
+}
+
+cmd_run() {
+  _require_config run "$1"
+  export DSC_MODE="enforce"
+  exec bash "$1"
+}
+
+cmd_check() {
+  _require_config check "$1"
+  export DSC_MODE="audit"
+  exec bash "$1"
+}
+
+cmd_destroy() {
+  _require_config destroy "$1"
+  export DSC_MODE="destroy"
+  exec bash "$1"
+}
+
+cmd_comply() {
+  _require_config comply "$1"
+  export DSC_MODE="audit"
+  export DSC_REPORT="full"
+  exec bash "$1"
+}
+
+cmd_version() {
+  echo "ssm-converge v${SSM_CONVERGE_VERSION}"
+}
+
+cmd_help() {
+  echo ""
+  echo -e "${BOLD}SSM Converge${NC} — Desired state configuration for AWS Systems Manager"
+  echo ""
+  echo "Usage: ssm-converge <command> [options]"
+  echo ""
+  echo "Commands:"
+  echo "  status            Show latest compliance state"
+  echo "  history [n]       Show last N runs (default: 10)"
+  echo "  drift             Show recent drift events"
+  echo "  export            Export latest report as InSpec-compatible JSON"
+  echo "  run <config>      Run a configuration in enforce mode"
+  echo "  check <config>    Run a configuration in audit mode (no changes)"
+  echo "  comply <config>   Run compliance checks and generate full report"
+  echo "  destroy <config>  Tear down resources defined in a configuration"
+  echo "  version           Show version (also: --version, -v)"
+  echo "  help              Show this help (also: --help, -h)"
+  echo ""
+  echo "Examples:"
+  echo "  ssm-converge status"
+  echo "  ssm-converge history 5"
+  echo "  ssm-converge check /opt/configs/webserver.sh"
+  echo "  ssm-converge run /opt/configs/webserver.sh"
+  echo "  ssm-converge destroy /opt/configs/webserver.sh"
+  echo "  ssm-converge export | jq '.profiles[0].controls[] | select(.results[0].status == \"failed\")'"
+  echo ""
+}
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
+case "${1:-help}" in
+  status)   cmd_status ;;
+  history)  cmd_history "$2" ;;
+  drift)    cmd_drift ;;
+  export)   cmd_export ;;
+  run)      cmd_run "$2" ;;
+  check)    cmd_check "$2" ;;
+  comply)   cmd_comply "$2" ;;
+  destroy)  cmd_destroy "$2" ;;
+  version|--version|-v) cmd_version ;;
+  help|--help|-h) cmd_help ;;
+  *)
+    echo -e "${RED}Unknown command:${NC} $1"
+    cmd_help
+    exit 1
+    ;;
+esac

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "2.2",
+  "description": "SSM Converge: Web Server Baseline — declarative desired-state config for web servers",
+  "parameters": {
+    "Mode": {
+      "type": "String",
+      "default": "enforce",
+      "allowedValues": ["enforce", "audit", "destroy"],
+      "description": "enforce = remediate drift, audit = report only, destroy = tear down"
+    },
+    "Profile": {
+      "type": "String",
+      "default": "webserver-baseline",
+      "description": "Profile name used in the compliance report"
+    },
+    "S3Bucket": {
+      "type": "String",
+      "default": "DOC-EXAMPLE-BUCKET",
+      "description": "S3 bucket holding the ssm-converge distribution and nginx config"
+    },
+    "ReportBucket": {
+      "type": "String",
+      "default": "",
+      "description": "Optional S3 bucket to ship the full compliance report JSON to. Leave empty to skip."
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "InstallSSMConverge",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "# Install (or refresh) ssm-converge. Safe to run every time.",
+          "mkdir -p /opt/ssm-converge",
+          "aws s3 sync s3://{{ S3Bucket }}/ssm-converge/src/linux/ /opt/ssm-converge/ --quiet",
+          "aws s3 cp s3://{{ S3Bucket }}/ssm-converge/cli/ssm-converge /usr/local/bin/ssm-converge --quiet",
+          "chmod +x /usr/local/bin/ssm-converge"
+        ]
+      }
+    },
+    {
+      "action": "aws:runShellScript",
+      "name": "RunConvergeConfig",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "export DSC_MODE='{{ Mode }}'",
+          "export DSC_PROFILE='{{ Profile }}'",
+          "",
+          "source /opt/ssm-converge/lib.sh",
+          "",
+          "# ── System ──",
+          "timezone 'UTC'",
+          "locale 'en_US.UTF-8'",
+          "",
+          "# ── Kernel tuning ──",
+          "sysctl 'net.core.somaxconn' value '65535'",
+          "sysctl 'vm.swappiness' value '10'",
+          "",
+          "# ── Users ──",
+          "group 'www-data' present",
+          "user 'www-deploy' present shell '/bin/bash' groups 'www-data'",
+          "",
+          "# ── Packages ──",
+          "package 'nginx' installed",
+          "package 'curl' installed",
+          "package 'telnet' uninstalled",
+          "",
+          "# ── Directories ──",
+          "directory '/var/www/app' present owner 'www-deploy' group 'www-data' mode '0755'",
+          "directory '/var/www/app/public' present owner 'www-deploy' group 'www-data' mode '0755'",
+          "",
+          "# ── Config ──",
+          "file '/etc/nginx/nginx.conf' present \\",
+          "  source 's3://{{ S3Bucket }}/configs/nginx.conf' \\",
+          "  owner 'root' mode '0644' \\",
+          "  notify 'reload-nginx'",
+          "",
+          "# ── Hosts ──",
+          "host_entry '10.0.1.10' present hostname 'api.internal'",
+          "host_entry '10.0.1.20' present hostname 'db.internal'",
+          "",
+          "# ── Service ──",
+          "service 'nginx' running enabled",
+          "",
+          "# ── Handlers ──",
+          "handler 'reload-nginx' systemctl reload nginx",
+          "",
+          "# ── Write local report + print summary ──",
+          "report_compliance",
+          "",
+          "# ── Optional: ship full JSON to an audit bucket ──",
+          "if [ -n '{{ ReportBucket }}' ]; then",
+          "  get_report_json | aws s3 cp - \"s3://{{ ReportBucket }}/{{ Profile }}/$(hostname)-$(date -u +%Y%m%dT%H%M%SZ).json\" --content-type application/json --quiet",
+          "fi"
+        ]
+      }
+    }
+  ]
+}

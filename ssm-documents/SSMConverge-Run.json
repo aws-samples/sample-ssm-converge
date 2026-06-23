@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Run an SSM Converge configuration inline. Requires ssm-converge to be installed (use SSMConverge-Install first). The configuration is responsible for calling report_compliance at the end.",
+  "parameters": {
+    "Mode": {
+      "type": "String",
+      "default": "enforce",
+      "allowedValues": ["enforce", "audit", "destroy"],
+      "description": "enforce = fix drift, audit = report drift only, destroy = tear down resources"
+    },
+    "Profile": {
+      "type": "String",
+      "default": "default",
+      "description": "Profile name. Appears in the report and in /var/lib/ssm-converge/drift.log."
+    },
+    "Report": {
+      "type": "String",
+      "default": "summary",
+      "allowedValues": ["summary", "full"],
+      "description": "summary = one-line header after the run, full = detailed compliance report"
+    },
+    "Config": {
+      "type": "String",
+      "description": "The configuration body — a bash script that sources lib.sh and declares resources. Must call report_compliance at the end. Base64-encoded; use `base64` to encode your configuration file before passing it."
+    },
+    "InstallPath": {
+      "type": "String",
+      "default": "/opt/ssm-converge",
+      "description": "Path where ssm-converge is installed"
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "RunConfig",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "set -e",
+          "",
+          "export DSC_MODE='{{ Mode }}'",
+          "export DSC_PROFILE='{{ Profile }}'",
+          "export DSC_REPORT='{{ Report }}'",
+          "export DSC_VERBOSE=true",
+          "",
+          "if [ ! -f '{{ InstallPath }}/lib.sh' ]; then",
+          "  echo '[ssm-converge] ERROR: Library not found at {{ InstallPath }}/lib.sh'",
+          "  echo '[ssm-converge] Run SSMConverge-Install first.'",
+          "  exit 1",
+          "fi",
+          "",
+          "CONFIG_FILE=$(mktemp /tmp/ssm-converge-config-XXXXXX.sh)",
+          "trap 'rm -f \"$CONFIG_FILE\"' EXIT",
+          "",
+          "# Decode the base64-encoded configuration into a temp file, then execute it.",
+          "# Base64 sidesteps all quoting / newline / StringList issues.",
+          "echo '{{ Config }}' | base64 -d > \"$CONFIG_FILE\"",
+          "chmod +x \"$CONFIG_FILE\"",
+          "",
+          "bash \"$CONFIG_FILE\""
+        ]
+      }
+    }
+  ]
+}

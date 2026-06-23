@@ -1,0 +1,183 @@
+site_name: SSM Converge
+site_description: An AWS-native, agentless DSC framework for declarative configuration management on EC2 — Linux and Windows, one DSL.
+site_url: https://awslabs.github.io/ssm-converge/
+repo_url: https://github.com/awslabs/ssm-converge
+repo_name: awslabs/ssm-converge
+edit_uri: edit/main/docs/
+
+# Treat broken links as errors at build time.
+strict: true
+
+docs_dir: docs
+
+# Files in docs/ that we want to keep on disk but exclude from the published site.
+# (The source documents and pre-MkDocs READMEs that have been migrated into the
+# new IA. Kept around as standalone PDFs / READMEs for offline distribution.)
+exclude_docs: |
+  /one-pager.md
+  /architecture.md
+  /requirements.md
+  /deployment.md
+  /resources/README.md
+
+theme:
+  name: material
+  language: en
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
+
+  font:
+    text: Amazon Ember, Helvetica Neue, Helvetica, Arial, sans-serif
+    code: Amazon Ember Mono, Roboto Mono, Menlo, Consolas, monospace
+
+  palette:
+    # Light mode - AWS brand: Squid Ink navy with Smile Orange accent
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+    # Dark mode - same palette, inverted background
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+  features:
+    - navigation.instant         # SPA-style page swaps
+    - navigation.instant.prefetch
+    - navigation.tracking        # URL fragment follows scroll
+    - navigation.tabs            # Top-level sections as tabs
+    - navigation.tabs.sticky
+    - navigation.sections        # Group sub-pages under section headers
+    - navigation.indexes         # Section landing pages via index.md
+    - navigation.top             # Back-to-top button
+    - navigation.footer          # Prev/next links at bottom
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link          # Linked content tabs across pages
+    - content.action.edit
+    - content.tooltips
+
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Extra CSS for AWS brand polish.
+extra_css:
+  - stylesheets/aws-theme.css
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+  - include-markdown      # so we can pull README sections into landing pages
+
+# Markdown extensions for the kind of content we have:
+# code blocks with annotations, admonitions for tips/warnings, tabs for
+# Linux/Windows side-by-side, footnotes for the deep cuts.
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      title: On this page
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/awslabs/ssm-converge
+  generator: false   # Hide "Made with Material for MkDocs" footer
+
+# Information architecture - Concepts sits up top before Quick Start (it's the
+# "why this exists" section that absorbs the architecture / value-prop content).
+nav:
+  - Home: index.md
+  - Concepts:
+      - concepts/index.md
+      - Modes: concepts/modes.md
+      - Resources & the DSL: concepts/resources.md
+      - Handlers & Notifications: concepts/handlers.md
+      - Compliance Reporting: concepts/reporting.md
+  - Quick Start: quickstart.md
+  - Resources:
+      - resources/index.md
+      - One-page Reference: resources/USAGE.md
+      - Linux:
+          - package: resources/linux/package.md
+          - file: resources/linux/file.md
+          - file_content: resources/linux/file_content.md
+          - execute: resources/linux/execute.md
+          - directory: resources/linux/directory.md
+          - service: resources/linux/service.md
+          - user: resources/linux/user.md
+          - group: resources/linux/group.md
+          - sysctl: resources/linux/sysctl.md
+          - cron: resources/linux/cron.md
+          - line_in_file: resources/linux/line_in_file.md
+          - mount_fs: resources/linux/mount_fs.md
+          - timezone: resources/linux/timezone.md
+          - locale: resources/linux/locale.md
+          - host_entry: resources/linux/host_entry.md
+      - Windows:
+          - File: resources/windows/File.md
+          - Directory: resources/windows/Directory.md
+          - Package: resources/windows/Package.md
+          - Execute: resources/windows/Execute.md
+          - WindowsService: resources/windows/WindowsService.md
+          - RegistryKey: resources/windows/RegistryKey.md
+          - WindowsFeature: resources/windows/WindowsFeature.md
+          - PowerShellModule: resources/windows/PowerShellModule.md
+          - Certificate: resources/windows/Certificate.md
+          - LocalUser: resources/windows/LocalUser.md
+          - LocalGroup: resources/windows/LocalGroup.md
+          - HostEntry: resources/windows/HostEntry.md
+          - EnvironmentVariable: resources/windows/EnvironmentVariable.md
+          - ScheduledTask: resources/windows/ScheduledTask.md
+          - DscResource: resources/windows/DscResource.md
+  - Deploying:
+      - deploying/index.md
+      - Installation: deploying/installation.md
+      - Running Configurations: deploying/running.md
+      - Scheduled Enforcement: deploying/scheduling.md
+      - Organization-wide: deploying/organization.md
+  - Examples:
+      - examples/index.md
+      - Linux: examples/linux.md
+      - Windows: examples/windows.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Report Schema: reference/schema.md
+      - Changelog: reference/changelog.md

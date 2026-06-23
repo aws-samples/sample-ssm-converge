@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "2.2",
+  "description": "Install SSM Converge library from S3. Run this once per instance (or as part of your baseline). After install, use SSMConverge-Run to execute configurations.",
+  "parameters": {
+    "S3Bucket": {
+      "type": "String",
+      "description": "S3 bucket containing the ssm-converge distribution (uploaded from the project's src/ and cli/ directories)"
+    },
+    "S3Prefix": {
+      "type": "String",
+      "default": "ssm-converge",
+      "description": "S3 prefix inside the bucket. Expected layout: <prefix>/src/ and <prefix>/cli/ssm-converge"
+    },
+    "InstallPath": {
+      "type": "String",
+      "default": "/opt/ssm-converge",
+      "description": "Local path to install the library (lib.sh + resources/)"
+    },
+    "Region": {
+      "type": "String",
+      "default": "",
+      "description": "AWS region of the S3 bucket. Leave empty to use the instance region."
+    }
+  },
+  "mainSteps": [
+    {
+      "action": "aws:runShellScript",
+      "name": "InstallSSMConverge",
+      "inputs": {
+        "runCommand": [
+          "#!/bin/bash",
+          "set -e",
+          "",
+          "INSTALL_PATH='{{ InstallPath }}'",
+          "S3_BASE=\"s3://{{ S3Bucket }}/{{ S3Prefix }}\"",
+          "REGION_FLAG=''",
+          "if [ -n '{{ Region }}' ]; then",
+          "  REGION_FLAG=\"--region {{ Region }}\"",
+          "fi",
+          "",
+          "echo \"[ssm-converge] Installing library to $INSTALL_PATH\"",
+          "mkdir -p \"$INSTALL_PATH\"",
+          "aws s3 sync \"$S3_BASE/src/linux/\" \"$INSTALL_PATH/\" --quiet $REGION_FLAG",
+          "",
+          "echo \"[ssm-converge] Installing CLI to /usr/local/bin/ssm-converge\"",
+          "aws s3 cp \"$S3_BASE/cli/ssm-converge\" /usr/local/bin/ssm-converge --quiet $REGION_FLAG",
+          "chmod +x /usr/local/bin/ssm-converge",
+          "",
+          "mkdir -p /var/lib/ssm-converge/history",
+          "",
+          "echo \"[ssm-converge] Installed files:\"",
+          "find \"$INSTALL_PATH\" -maxdepth 2 -type f | sort",
+          "echo \"\"",
+          "VERSION=$(grep '^SSM_CONVERGE_VERSION=' \"$INSTALL_PATH/lib.sh\" | head -1 | cut -d'\"' -f2)",
+          "echo \"[ssm-converge] Version: $VERSION\"",
+          "echo \"[ssm-converge] Installation complete.\""
+        ]
+      }
+    }
+  ]
+}
