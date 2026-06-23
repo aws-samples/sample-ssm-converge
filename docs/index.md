@@ -92,4 +92,4 @@ hide:
 
 ## License & contributing
 
-[Apache 2.0](https://github.com/awslabs/ssm-converge/blob/main/LICENSE). Issues and PRs welcome on [GitHub](https://github.com/awslabs/ssm-converge).
+[Apache 2.0](https://github.com/aws-samples/sample-ssm-converge/blob/main/LICENSE). Issues and PRs welcome on [GitHub](https://github.com/aws-samples/sample-ssm-converge).

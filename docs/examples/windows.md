@@ -2,11 +2,11 @@
 
 | File | Description | EC2 validation |
 |------|-------------|----------------|
-| [`iis-webserver.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/iis-webserver.ps1) | IIS from bare Windows — Web-Server role + sub-features, site directory, index.html, service state, registry hardening | **Full enforce + audit + idempotent re-run.** GET / returns HTTP 200. Uses pure primitives, no DscResource. |
-| [`wsfc-cluster.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/wsfc-cluster.ps1) | Failover Cluster node prep + cluster create | Prerequisites fully enforced: Failover-Clustering feature, RSAT-Clustering, FailoverClusterDsc module v2.2.0, host entries, ClusterAdmins local group. Cluster creation itself requires two nodes + AD domain (not attempted on single-node test). |
-| [`mssql-server.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/mssql-server.ps1) | Standalone SQL Server via `DscResource -Module SqlServerDsc` | Audit-only: correctly catalogs missing prerequisites (SqlServerDsc module, data directories, services, registry tuning). Full install requires installer media staged in S3 (outside scope of the sample). |
-| [`mssql-fci-baseline.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/mssql-fci-baseline.ps1) | MSSQL FCI node baseline demonstrating the pattern for porting existing DSC configurations (features, modules, host entries, local groups, cert import, domain join, gMSA, cluster create, node join, SQL install) | Documentary / audit pattern - full enforcement needs a real FCI environment. Shows the primitive + DscResource composition. |
-| [`install-vendor-msi.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/install-vendor-msi.ps1) | Download + unattended install pattern for Windows: public HTTPS, authenticated HTTPS (bearer / basic / custom headers), and S3 sources, paired with `Execute -Creates` / `-NotIf`. Includes MSI (CloudWatch Agent), authenticated MSI (Artifactory-style), S3 MSI, and InnoSetup/NSIS-style EXE installers. | enforce + audit, idempotent re-run verified on Windows Server 2022 |
+| [`iis-webserver.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/iis-webserver.ps1) | IIS from bare Windows — Web-Server role + sub-features, site directory, index.html, service state, registry hardening | **Full enforce + audit + idempotent re-run.** GET / returns HTTP 200. Uses pure primitives, no DscResource. |
+| [`wsfc-cluster.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/wsfc-cluster.ps1) | Failover Cluster node prep + cluster create | Prerequisites fully enforced: Failover-Clustering feature, RSAT-Clustering, FailoverClusterDsc module v2.2.0, host entries, ClusterAdmins local group. Cluster creation itself requires two nodes + AD domain (not attempted on single-node test). |
+| [`mssql-server.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/mssql-server.ps1) | Standalone SQL Server via `DscResource -Module SqlServerDsc` | Audit-only: correctly catalogs missing prerequisites (SqlServerDsc module, data directories, services, registry tuning). Full install requires installer media staged in S3 (outside scope of the sample). |
+| [`mssql-fci-baseline.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/mssql-fci-baseline.ps1) | MSSQL FCI node baseline demonstrating the pattern for porting existing DSC configurations (features, modules, host entries, local groups, cert import, domain join, gMSA, cluster create, node join, SQL install) | Documentary / audit pattern - full enforcement needs a real FCI environment. Shows the primitive + DscResource composition. |
+| [`install-vendor-msi.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/install-vendor-msi.ps1) | Download + unattended install pattern for Windows: public HTTPS, authenticated HTTPS (bearer / basic / custom headers), and S3 sources, paired with `Execute -Creates` / `-NotIf`. Includes MSI (CloudWatch Agent), authenticated MSI (Artifactory-style), S3 MSI, and InnoSetup/NSIS-style EXE installers. | enforce + audit, idempotent re-run verified on Windows Server 2022 |
 
 ## IIS example anatomy
 
@@ -51,7 +51,7 @@ if (Test-RebootRequired) {
 }
 ```
 
-Full file: [`examples/windows/iis-webserver.ps1`](https://github.com/awslabs/ssm-converge/blob/main/examples/windows/iis-webserver.ps1).
+Full file: [`examples/windows/iis-webserver.ps1`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/windows/iis-webserver.ps1).
 
 ## DscResource bridge — keeping existing DSC investment
 

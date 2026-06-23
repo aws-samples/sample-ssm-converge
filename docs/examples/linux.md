@@ -2,17 +2,17 @@
 
 | File | Description | EC2 validation |
 |------|-------------|----------------|
-| [`nginx-webserver.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/nginx-webserver.sh) | NGINX with virtual host, TLS dirs, log rotation, kernel tuning | enforce + audit, HTTP 200 on localhost |
-| [`webserver-apache.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/webserver-apache.sh) | Apache HTTPD with hardening, vhost, mod_ssl | enforce + audit, HTTP 200 on localhost |
-| [`os-post-build.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/os-post-build.sh) | Post-build OS baseline — hardening, agents, time sync, monitoring | enforce + audit, 52/55 ok on clean AL2023 |
-| [`security-hardening.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/security-hardening.sh) | CIS-style OS hardening — SSH, sysctl, permissions, unused packages | enforce + audit, idempotent re-run verified |
-| [`install-vendor-package.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/install-vendor-package.sh) | Download + unattended install pattern: public HTTPS, authenticated HTTPS (bearer / basic), and S3 sources, paired with `execute` and `creates` / `not_if` guards. Three scenarios in one configuration: CloudWatch Agent (public HTTPS), Artifactory-style (token), and S3 (instance role). | enforce + audit, idempotent re-run verified on AL2023 + Ubuntu |
-| [`ssm-doc-webserver.json`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/ssm-doc-webserver.json) | Runs the webserver baseline via SSM Run Command | Document registered and executed against fleet |
-| [`ssm-doc-audit-only.json`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/ssm-doc-audit-only.json) | Audit-mode document for scheduled drift detection | Used as State Manager association shape |
+| [`nginx-webserver.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/nginx-webserver.sh) | NGINX with virtual host, TLS dirs, log rotation, kernel tuning | enforce + audit, HTTP 200 on localhost |
+| [`webserver-apache.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/webserver-apache.sh) | Apache HTTPD with hardening, vhost, mod_ssl | enforce + audit, HTTP 200 on localhost |
+| [`os-post-build.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/os-post-build.sh) | Post-build OS baseline — hardening, agents, time sync, monitoring | enforce + audit, 52/55 ok on clean AL2023 |
+| [`security-hardening.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/security-hardening.sh) | CIS-style OS hardening — SSH, sysctl, permissions, unused packages | enforce + audit, idempotent re-run verified |
+| [`install-vendor-package.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/install-vendor-package.sh) | Download + unattended install pattern: public HTTPS, authenticated HTTPS (bearer / basic), and S3 sources, paired with `execute` and `creates` / `not_if` guards. Three scenarios in one configuration: CloudWatch Agent (public HTTPS), Artifactory-style (token), and S3 (instance role). | enforce + audit, idempotent re-run verified on AL2023 + Ubuntu |
+| [`ssm-doc-webserver.json`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/ssm-doc-webserver.json) | Runs the webserver baseline via SSM Run Command | Document registered and executed against fleet |
+| [`ssm-doc-audit-only.json`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/ssm-doc-audit-only.json) | Audit-mode document for scheduled drift detection | Used as State Manager association shape |
 
 ## Reference-only examples
 
-Under [`linux/reference/`](https://github.com/awslabs/ssm-converge/tree/main/examples/linux/reference): `webserver-baseline.sh`, `apache-tomcat.sh`, `postgresql-server.sh`, `app-deploy.sh`. These need environment-specific adaptation (S3 artifacts, app runtimes, larger instance sizes) before running. Not validated end-to-end.
+Under [`linux/reference/`](https://github.com/aws-samples/sample-ssm-converge/tree/main/examples/linux/reference): `webserver-baseline.sh`, `apache-tomcat.sh`, `postgresql-server.sh`, `app-deploy.sh`. These need environment-specific adaptation (S3 artifacts, app runtimes, larger instance sizes) before running. Not validated end-to-end.
 
 ## NGINX example anatomy
 
@@ -53,7 +53,7 @@ handler 'reload-nginx' systemctl reload nginx
 report_compliance
 ```
 
-Full file: [`examples/linux/nginx-webserver.sh`](https://github.com/awslabs/ssm-converge/blob/main/examples/linux/nginx-webserver.sh).
+Full file: [`examples/linux/nginx-webserver.sh`](https://github.com/aws-samples/sample-ssm-converge/blob/main/examples/linux/nginx-webserver.sh).
 
 ## Download-and-install pattern
 

@@ -1,8 +1,8 @@
 site_name: SSM Converge
 site_description: An AWS-native, agentless DSC framework for declarative configuration management on EC2 — Linux and Windows, one DSL.
-site_url: https://awslabs.github.io/ssm-converge/
-repo_url: https://github.com/awslabs/ssm-converge
-repo_name: awslabs/ssm-converge
+site_url: https://aws-samples.github.io/sample-ssm-converge/
+repo_url: https://github.com/aws-samples/sample-ssm-converge
+repo_name: aws-samples/sample-ssm-converge
 edit_uri: edit/main/docs/
 
 # Treat broken links as errors at build time.
@@ -118,7 +118,7 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/awslabs/ssm-converge
+      link: https://github.com/aws-samples/sample-ssm-converge
   generator: false   # Hide "Made with Material for MkDocs" footer
 
 # Information architecture - Concepts sits up top before Quick Start (it's the

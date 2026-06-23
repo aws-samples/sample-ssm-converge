@@ -4,7 +4,7 @@
 
 *Declare. Converge. Comply.*
 
-📘 **Full documentation: [https://github.com/awslabs/ssm-converge](https://github.com/awslabs/ssm-converge)**
+📘 **Full documentation: [https://github.com/aws-samples/sample-ssm-converge](https://github.com/aws-samples/sample-ssm-converge)**
 
 SSM Converge is a library that brings Chef/Ansible-style declarative configuration management to AWS Systems Manager. It runs through the existing SSM Agent with no extra runtimes — no Ruby, no Python agents, no third-party tooling. Same DSL on Linux (bash) and Windows (PowerShell).
 
