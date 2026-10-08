@@ -9,6 +9,12 @@ hide:
 
 **An AWS-native, agentless DSC framework for declarative configuration management on EC2.** One DSL for Linux and Windows. Runs through SSM. Reports compliance back to AWS.
 
+<video src="assets/ssm-converge-explainer.webm"
+       autoplay loop muted playsinline controls
+       style="width:100%;max-width:960px;border-radius:12px;display:block;margin:1.5rem auto">
+  Your browser can't play this video. <a href="assets/ssm-converge-explainer.webm">Download it</a>.
+</video>
+
 <div class="grid cards" markdown>
 
 - ### :material-cloud-check: AWS-native

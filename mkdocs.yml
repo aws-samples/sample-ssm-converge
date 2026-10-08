@@ -23,8 +23,8 @@ exclude_docs: |
 theme:
   name: material
   language: en
-  logo: assets/logo.svg
-  favicon: assets/favicon.svg
+  logo: assets/ssm-converge-icon.svg
+  favicon: assets/ssm-converge-icon.svg
 
   font:
     text: Amazon Ember, Helvetica Neue, Helvetica, Arial, sans-serif
